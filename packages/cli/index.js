@@ -56,7 +56,7 @@ function main() {
                     { title: "Yes", value: true },
                     { title: "No", value: false },
                 ],
-                initial: 1,
+                initial: 0,
             },
         ]);
         // Convert yes/no answers to an array of selected features
@@ -74,9 +74,13 @@ function main() {
         });
         for (const feature of features) {
             console.log(`🔧 Adding ${feature}...`);
-            yield fs_extra_1.default.copy(path_1.default.join(__dirname, `../templates/${feature}`), projectPath, {
-                overwrite: true,
-            });
+            // If Auth.js was selected, copy the login page
+            if (feature === "auth") {
+                const loginPagePath = path_1.default.join(__dirname, "../templates/auth");
+                const loginTargetPath = path_1.default.join(projectPath, "src/app");
+                yield fs_extra_1.default.copy(loginPagePath, loginTargetPath);
+                console.log("🧩 Added login page template.");
+            }
         }
         console.log("📥 Installing dependencies...");
         yield (0, execa_1.execa)("npm", ["install"], { cwd: projectPath, stdio: "inherit" });

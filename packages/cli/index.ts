@@ -45,7 +45,7 @@ async function main() {
                 { title: "Yes", value: true },
                 { title: "No", value: false },
             ],
-            initial: 1,
+            initial: 0,
         },
     ]);
 
@@ -65,9 +65,14 @@ async function main() {
 
     for (const feature of features) {
         console.log(`🔧 Adding ${feature}...`);
-        await fs.copy(path.join(__dirname, `../templates/${feature}`), projectPath, {
-            overwrite: true,
-        });
+        
+        // If Auth.js was selected, copy the login page
+        if (feature === "auth") {
+            const loginPagePath = path.join(__dirname, "../templates/auth");
+            const loginTargetPath = path.join(projectPath, "src/app");
+            await fs.copy(loginPagePath, loginTargetPath);
+            console.log("🧩 Added login page template.");
+        }
     }
 
     console.log("📥 Installing dependencies...");
