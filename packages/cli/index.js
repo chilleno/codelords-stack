@@ -68,7 +68,10 @@ function main() {
         const { projectName } = response;
         const projectPath = path_1.default.join(process.cwd(), projectName);
         console.log("📦 Copying base template...");
-        yield fs_extra_1.default.copy(path_1.default.join(__dirname, "../templates/base"), projectPath);
+        yield fs_extra_1.default.copy(path_1.default.join(__dirname, "../templates/base"), projectPath).then(() => {
+            // Now run the .env copy
+            copyEnvFile(projectPath);
+        });
         for (const feature of features) {
             console.log(`🔧 Adding ${feature}...`);
             yield fs_extra_1.default.copy(path_1.default.join(__dirname, `../templates/${feature}`), projectPath, {
@@ -78,6 +81,26 @@ function main() {
         console.log("📥 Installing dependencies...");
         yield (0, execa_1.execa)("npm", ["install"], { cwd: projectPath, stdio: "inherit" });
         console.log("✅ Codelords Stack is ready!");
+    });
+}
+// Function to copy the .env.example file to .env in the project directory
+function copyEnvFile(projectPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const templateEnvPath = path_1.default.join(__dirname, '../templates/base/env.example');
+        const projectEnvPath = path_1.default.join(projectPath, '.env');
+        try {
+            const envAlreadyExists = yield fs_extra_1.default.pathExists(projectEnvPath);
+            if (!envAlreadyExists) {
+                yield fs_extra_1.default.copy(templateEnvPath, projectEnvPath);
+                console.log("🔧 .env created from template.");
+            }
+            else {
+                console.log("⚠️  Skipped .env creation — file already exists.");
+            }
+        }
+        catch (err) {
+            console.error("❌ Failed to copy .env:", err);
+        }
     });
 }
 main();

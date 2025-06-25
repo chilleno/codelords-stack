@@ -58,7 +58,10 @@ async function main() {
     const projectPath = path.join(process.cwd(), projectName);
 
     console.log("📦 Copying base template...");
-    await fs.copy(path.join(__dirname, "../templates/base"), projectPath);
+    await fs.copy(path.join(__dirname, "../templates/base"), projectPath).then(() => {
+        // Now run the .env copy
+        copyEnvFile(projectPath);
+    });
 
     for (const feature of features) {
         console.log(`🔧 Adding ${feature}...`);
@@ -71,6 +74,25 @@ async function main() {
     await execa("npm", ["install"], { cwd: projectPath, stdio: "inherit" });
 
     console.log("✅ Codelords Stack is ready!");
+}
+
+// Function to copy the .env.example file to .env in the project directory
+async function copyEnvFile(projectPath: string) {
+    const templateEnvPath = path.join(__dirname, '../templates/base/env.example');
+    const projectEnvPath = path.join(projectPath, '.env');
+
+    try {
+        const envAlreadyExists = await fs.pathExists(projectEnvPath);
+
+        if (!envAlreadyExists) {
+            await fs.copy(templateEnvPath, projectEnvPath);
+            console.log("🔧 .env created from template.");
+        } else {
+            console.log("⚠️  Skipped .env creation — file already exists.");
+        }
+    } catch (err) {
+        console.error("❌ Failed to copy .env:", err);
+    }
 }
 
 main();
