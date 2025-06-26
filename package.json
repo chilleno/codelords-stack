@@ -1,6 +1,6 @@
 {
   "name": "codelords-stack",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "private": false,
   "bin": {
     "codelords-stack": "./packages/cli/index.js"
