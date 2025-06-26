@@ -39,7 +39,7 @@ export function LoginForm({
                 setError("Correo o contraseña incorrectos")
                 setIsLoading(false)
             } else {
-                router.push("/home") // redirect to homepage or dashboard
+                router.push("/status") // redirect to homepage or dashboard
             }
         })
     }
