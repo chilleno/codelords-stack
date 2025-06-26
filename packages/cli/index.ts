@@ -4,6 +4,7 @@ import { execa } from "execa";
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
+import crypto from "crypto";
 
 // Clear the console and display the logo
 console.clear();
@@ -65,18 +66,41 @@ async function main() {
 
     for (const feature of features) {
         console.log(`🔧 Adding ${feature}...`);
-        
+
         // If Auth.js was selected, copy the login page
         if (feature === "auth") {
+            console.log("🧩 Adding login page template.");
             const loginPagePath = path.join(__dirname, "../templates/auth");
-            const loginTargetPath = path.join(projectPath, "src/app");
+            const loginTargetPath = path.join(projectPath, "src");
             await fs.copy(loginPagePath, loginTargetPath);
-            console.log("🧩 Added login page template.");
+
+            console.log("🔐 Installing next-auth...");
+            await execa("npm", ["install", "next-auth@beta"], {
+                cwd: projectPath,
+                stdio: "ignore",
+            });
+
+
+            console.log("🔑 Generating Auth secret...");
+            const secret = crypto.randomBytes(32).toString("hex");
+
+            const envPath = path.join(projectPath, ".env");
+            const envContent = await fs.readFile(envPath, "utf-8");
+
+            if (!envContent.includes("AUTH_SECRET=")) {
+                const newEnv = `${envContent}\nAUTH_SECRET=${secret}\n`;
+                await fs.writeFile(envPath, newEnv);
+                console.log("🔐 AUTH_SECRET added to .env file.");
+            } else {
+                console.log("⚠️  AUTH_SECRET already exists in .env. Skipped.");
+            }
+
+
         }
     }
 
     console.log("📥 Installing dependencies...");
-    await execa("npm", ["install"], { cwd: projectPath, stdio: "inherit" });
+    await execa("npm", ["install"], { cwd: projectPath, stdio: "ignore" });
 
     console.log("✅ Codelords Stack is ready!");
 }

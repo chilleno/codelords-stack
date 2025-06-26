@@ -18,6 +18,7 @@ const execa_1 = require("execa");
 const fs_extra_1 = __importDefault(require("fs-extra"));
 const path_1 = __importDefault(require("path"));
 const chalk_1 = __importDefault(require("chalk"));
+const crypto_1 = __importDefault(require("crypto"));
 // Clear the console and display the logo
 console.clear();
 const logo = chalk_1.default.cyan(`
@@ -76,14 +77,31 @@ function main() {
             console.log(`🔧 Adding ${feature}...`);
             // If Auth.js was selected, copy the login page
             if (feature === "auth") {
+                console.log("🧩 Adding login page template.");
                 const loginPagePath = path_1.default.join(__dirname, "../templates/auth");
-                const loginTargetPath = path_1.default.join(projectPath, "src/app");
+                const loginTargetPath = path_1.default.join(projectPath, "src");
                 yield fs_extra_1.default.copy(loginPagePath, loginTargetPath);
-                console.log("🧩 Added login page template.");
+                console.log("🔐 Installing next-auth...");
+                yield (0, execa_1.execa)("npm", ["install", "next-auth@beta"], {
+                    cwd: projectPath,
+                    stdio: "ignore",
+                });
+                console.log("🔑 Generating Auth secret...");
+                const secret = crypto_1.default.randomBytes(32).toString("hex");
+                const envPath = path_1.default.join(projectPath, ".env");
+                const envContent = yield fs_extra_1.default.readFile(envPath, "utf-8");
+                if (!envContent.includes("AUTH_SECRET=")) {
+                    const newEnv = `${envContent}\nAUTH_SECRET=${secret}\n`;
+                    yield fs_extra_1.default.writeFile(envPath, newEnv);
+                    console.log("🔐 AUTH_SECRET added to .env file.");
+                }
+                else {
+                    console.log("⚠️  AUTH_SECRET already exists in .env. Skipped.");
+                }
             }
         }
         console.log("📥 Installing dependencies...");
-        yield (0, execa_1.execa)("npm", ["install"], { cwd: projectPath, stdio: "inherit" });
+        yield (0, execa_1.execa)("npm", ["install"], { cwd: projectPath, stdio: "ignore" });
         console.log("✅ Codelords Stack is ready!");
     });
 }
