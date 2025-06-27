@@ -13,7 +13,7 @@ Use it to kick off production-ready projects in seconds.
 - 🎨 Tailwind CSS pre-configured
 - 🧬 Prisma + PostgreSQL database setup
 - 🔐 Optional Auth.js (Email/Password login)
-- 💳 Optional LemonSqueezy integration
+- 💳 Optional LemonSqueezy integration (WIP 🚧)
 - ✅ `/status` page to verify feature status
 - 🛠️ CLI with `npx codelords-stack` command
 
@@ -35,21 +35,13 @@ Then follow the interactive prompts:
 
 After generation:
 
-```bash
-cd your-project-name
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
 ## ⚙️ Database Setup
 
 Prisma is configured to use **PostgreSQL**. Your connection string is located in `.env`:
 
+
 ```
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/mydb"
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/postgres?schema=database_name_db"
 ```
 
 ### Run after installing:
@@ -59,7 +51,37 @@ npx prisma generate
 npx prisma db push
 ```
 
+
 You can find the Prisma schema at `prisma/schema.prisma`.
+
+### To create a new migration, modify schema.prisma and then run:  
+
+```bash
+ npx prisma migrate dev --name name_of_migration;
+```
+
+### To reset database run:  [⚠️ this command will be remove all the tables on your connected database]
+
+```bash
+ npx prisma migrate reset
+```
+
+
+### to push the schema to the database, run the following command:
+
+```bash
+ npx prisma db push
+```
+
+---
+
+## ⚙️ Run after database is configured:
+```bash
+cd your-project-name
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
@@ -121,7 +143,7 @@ We use this stack in production for our own apps — and now, you can too.
 
 💬 Follow us on [Instagram](https://instagram.com/chillenow) or [X](https://x.com/chillenow) for updates.
 
-💸 Wanna tip? you cna via Github Sponsors [Github Sponsors](https://github.com/sponsors/chilleno)
+💸 Wanna tip? you can via Github Sponsors [Github Sponsors](https://github.com/sponsors/chilleno)
 
 ---
 
