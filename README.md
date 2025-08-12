@@ -1,4 +1,5 @@
 # ⚔️ Codelords Stack
+[![NPM version][npm-image]][npm-url]
 
 > The full-featured Next.js starter CLI built for serious developers by [Chillenow](https://codelords.cl)
 
@@ -150,3 +151,6 @@ We use this stack in production for our own apps — and now, you can too.
 ## 🏷 License
 
 [MIT](./LICENSE)
+
+[npm-url]: https://www.npmjs.com/package/codelords-stack
+[npm-image]: https://img.shields.io/npm/v/codelords-stack?color=0b7285&logoColor=0b7285
