@@ -59,6 +59,16 @@ function main() {
                 ],
                 initial: 0,
             },
+            {
+                type: "select",
+                name: "mailgun",
+                message: "Include Mailgun (email sending)?",
+                choices: [
+                    { title: "Yes", value: true },
+                    { title: "No", value: false },
+                ],
+                initial: 0,
+            },
         ]);
         // Convert yes/no answers to an array of selected features
         const features = [];
@@ -66,6 +76,8 @@ function main() {
             features.push("auth");
         if (response.lemonsqueezy)
             features.push("lemonsqueezy");
+        if (response.mailgun)
+            features.push("mailgun");
         const { projectName } = response;
         const projectPath = path_1.default.join(process.cwd(), projectName);
         console.log("📦 Copying base template...");
@@ -98,6 +110,45 @@ function main() {
                 else {
                     console.log("⚠️  AUTH_SECRET already exists in .env. Skipped.");
                 }
+            }
+            // If Mailgun was selected, copy the lib and install deps
+            if (feature === "mailgun") {
+                console.log("✉️  Adding Mailgun library...");
+                // Ensure lib directory exists and copy file
+                const mailgunTemplatePath = path_1.default.join(__dirname, "../templates/mailgun/mailgun.ts");
+                const libTargetDir = path_1.default.join(projectPath, "src", "lib");
+                yield fs_extra_1.default.ensureDir(libTargetDir);
+                yield fs_extra_1.default.copy(mailgunTemplatePath, path_1.default.join(libTargetDir, "mailgun.ts"));
+                console.log("📄 Copied mailgun.ts to src/lib.");
+                console.log("📦 Installing mailgun.js and form-data...");
+                yield (0, execa_1.execa)("npm", ["install", "mailgun.js@^11", "form-data@^4"], {
+                    cwd: projectPath,
+                    stdio: "ignore",
+                });
+                // Add helpful .env placeholders if missing
+                try {
+                    const envPath = path_1.default.join(projectPath, ".env");
+                    const envExists = yield fs_extra_1.default.pathExists(envPath);
+                    if (envExists) {
+                        const envContent = yield fs_extra_1.default.readFile(envPath, "utf-8");
+                        const linesToAdd = [];
+                        if (!envContent.includes("MAILGUN_API_KEY="))
+                            linesToAdd.push("MAILGUN_API_KEY=");
+                        if (!envContent.includes("MAILGUN_DOMAIN="))
+                            linesToAdd.push("MAILGUN_DOMAIN=");
+                        if (!envContent.includes("MAILGUN_FROM_NAME="))
+                            linesToAdd.push("MAILGUN_FROM_NAME=");
+                        if (linesToAdd.length) {
+                            yield fs_extra_1.default.appendFile(envPath, "\n" + linesToAdd.join("\n") + "\n");
+                            console.log("🔧 Added MAILGUN_* placeholders to .env.");
+                        }
+                    }
+                }
+                catch (err) {
+                    // Non-fatal; just inform
+                    console.log("⚠️  Could not update .env with MAILGUN_* placeholders.");
+                }
+                console.log("ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_FROM_NAME in your .env file.");
             }
         }
         console.log("📥 Installing dependencies...");
