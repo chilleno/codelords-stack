@@ -137,7 +137,7 @@ async function main() {
                     const linesToAdd: string[] = [];
                     if (!envContent.includes("MAILGUN_API_KEY=")) linesToAdd.push("MAILGUN_API_KEY=");
                     if (!envContent.includes("MAILGUN_DOMAIN=")) linesToAdd.push("MAILGUN_DOMAIN=");
-                    if (!envContent.includes("MAILGUN_BASE_URL=")) linesToAdd.push("MAILGUN_BASE_URL=https://api.mailgun.net");
+                    if (!envContent.includes("MAILGUN_FROM_NAME=")) linesToAdd.push("MAILGUN_FROM_NAME=");
                     if (linesToAdd.length) {
                         await fs.appendFile(envPath, "\n" + linesToAdd.join("\n") + "\n");
                         console.log("🔧 Added MAILGUN_* placeholders to .env.");
@@ -149,7 +149,7 @@ async function main() {
             }
 
             console.log(
-                "ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN, and MAILGUN_BASE_URL in your .env file. US: https://api.mailgun.net, EU: https://api.eu.mailgun.net"
+                "ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_FROM_NAME in your .env file."
             );
         }
     }
