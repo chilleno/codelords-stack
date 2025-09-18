@@ -136,8 +136,8 @@ function main() {
                             linesToAdd.push("MAILGUN_API_KEY=");
                         if (!envContent.includes("MAILGUN_DOMAIN="))
                             linesToAdd.push("MAILGUN_DOMAIN=");
-                        if (!envContent.includes("MAILGUN_BASE_URL="))
-                            linesToAdd.push("MAILGUN_BASE_URL=https://api.mailgun.net");
+                        if (!envContent.includes("MAILGUN_FROM_NAME="))
+                            linesToAdd.push("MAILGUN_FROM_NAME=");
                         if (linesToAdd.length) {
                             yield fs_extra_1.default.appendFile(envPath, "\n" + linesToAdd.join("\n") + "\n");
                             console.log("🔧 Added MAILGUN_* placeholders to .env.");
@@ -148,7 +148,7 @@ function main() {
                     // Non-fatal; just inform
                     console.log("⚠️  Could not update .env with MAILGUN_* placeholders.");
                 }
-                console.log("ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN, and MAILGUN_BASE_URL in your .env file. US: https://api.mailgun.net, EU: https://api.eu.mailgun.net");
+                console.log("ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_FROM_NAME in your .env file.");
             }
         }
         console.log("📥 Installing dependencies...");
