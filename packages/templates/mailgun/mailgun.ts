@@ -8,14 +8,28 @@ export async function sendSimpleMessage(
   text: string,
   html?: string
 ) {
+  // Validate required environment variables
+  const apiKey = process.env.MAILGUN_API_KEY;
+  if (!apiKey) {
+    throw new Error("MAILGUN_API_KEY is required but not set in environment variables.");
+  }
+
+  const domain = process.env.MAILGUN_DOMAIN;
+  if (!domain) {
+    throw new Error("MAILGUN_DOMAIN is required but not set in environment variables.");
+  }
+
+  const fromName = process.env.MAILGUN_FROM_NAME;
+  if (!fromName) {
+    throw new Error("MAILGUN_FROM_NAME is required but not set in environment variables.");
+  }
+
   const mailgun = new Mailgun(FormData);
   const mg = mailgun.client({
     username: "api",
-    key: process.env.MAILGUN_API_KEY,
+    key: apiKey,
   });
   try {
-    const domain = process.env.MAILGUN_DOMAIN;
-    const fromName = process.env.MAILGUN_FROM_NAME;
     const from = `${fromName} <postmaster@${domain}>`;
     const data = await mg.messages.create(domain, {
       from,
@@ -30,7 +44,7 @@ export async function sendSimpleMessage(
       data,
     };
   } catch (error) {
-    console.error(error); //logs any error
+    console.error(error); // logs any error
     return {
       ok: false,
       error: error,
