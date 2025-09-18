@@ -40,7 +40,7 @@ export async function sendSimpleMessage(
   }
 
   const toName = name.trim();
-  const toEmail = (email as string).trim();
+  const toEmail = email.trim();
   const from = `${fromName} <postmaster@${domain}>`;
 
   const mailgun = new Mailgun(FormData);
