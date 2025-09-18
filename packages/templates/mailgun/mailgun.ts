@@ -26,7 +26,7 @@ export async function sendSimpleMessage(
 
     return {
       ok: true,
-  data: data,
+      data,
     };
   } catch (error) {
     console.error(error); //logs any error
