@@ -11,14 +11,15 @@ export async function sendSimpleMessage(
   const mailgun = new Mailgun(FormData);
   const mg = mailgun.client({
     username: "api",
-    key: process.env.MAILGUN_API_KEY || "API_KEY",
+    key: process.env.MAILGUN_API_KEY,
   });
   try {
-    const domain = process.env.MAILGUN_DOMAIN || "ticroom.cl";
-    const from = `Masenlaces.com <postmaster@${domain}>`;
+    const domain = process.env.MAILGUN_DOMAIN;
+    const fromName = process.env.MAILGUN_FROM_NAME;
+    const from = `${fromName} <postmaster@${domain}>`;
     const data = await mg.messages.create(domain, {
       from,
-      to: [`${name}<${email}>`],
+      to: [`${name} <${email}>`],
       subject,
       text,
       ...(html ? { html } : {}),
