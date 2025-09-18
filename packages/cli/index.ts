@@ -48,12 +48,23 @@ async function main() {
             ],
             initial: 0,
         },
+        {
+            type: "select",
+            name: "mailgun",
+            message: "Include Mailgun (email sending)?",
+            choices: [
+                { title: "Yes", value: true },
+                { title: "No", value: false },
+            ],
+            initial: 0,
+        },
     ]);
 
     // Convert yes/no answers to an array of selected features
     const features = [];
     if (response.auth) features.push("auth");
     if (response.lemonsqueezy) features.push("lemonsqueezy");
+    if (response.mailgun) features.push("mailgun");
 
     const { projectName } = response;
     const projectPath = path.join(process.cwd(), projectName);
@@ -96,6 +107,50 @@ async function main() {
             }
 
 
+        }
+        // If Mailgun was selected, copy the lib and install deps
+        if (feature === "mailgun") {
+            console.log("✉️  Adding Mailgun library...");
+
+            // Ensure lib directory exists and copy file
+            const mailgunTemplatePath = path.join(
+                __dirname,
+                "../templates/mailgun/mailgun.ts"
+            );
+            const libTargetDir = path.join(projectPath, "src", "lib");
+            await fs.ensureDir(libTargetDir);
+            await fs.copy(mailgunTemplatePath, path.join(libTargetDir, "mailgun.ts"));
+            console.log("📄 Copied mailgun.ts to src/lib.");
+
+            console.log("📦 Installing mailgun.js and form-data...");
+            await execa("npm", ["install", "mailgun.js@^11", "form-data@^4"], {
+                cwd: projectPath,
+                stdio: "ignore",
+            });
+
+            // Add helpful .env placeholders if missing
+            try {
+                const envPath = path.join(projectPath, ".env");
+                const envExists = await fs.pathExists(envPath);
+                if (envExists) {
+                    const envContent = await fs.readFile(envPath, "utf-8");
+                    const linesToAdd: string[] = [];
+                    if (!envContent.includes("MAILGUN_API_KEY=")) linesToAdd.push("MAILGUN_API_KEY=");
+                    if (!envContent.includes("MAILGUN_DOMAIN=")) linesToAdd.push("MAILGUN_DOMAIN=");
+                    if (!envContent.includes("MAILGUN_BASE_URL=")) linesToAdd.push("MAILGUN_BASE_URL=https://api.mailgun.net");
+                    if (linesToAdd.length) {
+                        await fs.appendFile(envPath, "\n" + linesToAdd.join("\n") + "\n");
+                        console.log("🔧 Added MAILGUN_* placeholders to .env.");
+                    }
+                }
+            } catch (err) {
+                // Non-fatal; just inform
+                console.log("⚠️  Could not update .env with MAILGUN_* placeholders.");
+            }
+
+            console.log(
+                "ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN, and MAILGUN_BASE_URL in your .env file. US: https://api.mailgun.net, EU: https://api.eu.mailgun.net"
+            );
         }
     }
 
