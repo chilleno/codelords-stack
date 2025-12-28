@@ -42,7 +42,7 @@ function main() {
             {
                 type: "select",
                 name: "auth",
-                message: "Include Auth.js (Email/Password)?",
+                message: "Include Better Auth (Email/Password)?",
                 choices: [
                     { title: "Yes", value: true },
                     { title: "No", value: false },
@@ -87,28 +87,28 @@ function main() {
         });
         for (const feature of features) {
             console.log(`🔧 Adding ${feature}...`);
-            // If Auth.js was selected, copy the login page
+            // If Better Auth was selected, copy the auth templates
             if (feature === "auth") {
-                console.log("🧩 Adding login page template.");
+                console.log("🧩 Adding auth templates.");
                 const loginPagePath = path_1.default.join(__dirname, "../templates/auth");
                 const loginTargetPath = path_1.default.join(projectPath, "src");
                 yield fs_extra_1.default.copy(loginPagePath, loginTargetPath);
-                console.log("🔐 Installing next-auth...");
-                yield (0, execa_1.execa)("npm", ["install", "next-auth@beta"], {
+                console.log("🔐 Installing better-auth...");
+                yield (0, execa_1.execa)("npm", ["install", "better-auth"], {
                     cwd: projectPath,
                     stdio: "ignore",
                 });
-                console.log("🔑 Generating Auth secret...");
+                console.log("🔑 Generating Better Auth secret...");
                 const secret = crypto_1.default.randomBytes(32).toString("hex");
                 const envPath = path_1.default.join(projectPath, ".env");
                 const envContent = yield fs_extra_1.default.readFile(envPath, "utf-8");
-                if (!envContent.includes("AUTH_SECRET=")) {
-                    const newEnv = `${envContent}\nAUTH_SECRET=${secret}\n`;
+                if (!envContent.includes("BETTER_AUTH_SECRET=")) {
+                    const newEnv = `${envContent}\nBETTER_AUTH_SECRET=${secret}\nBETTER_AUTH_URL=http://localhost:3000\n`;
                     yield fs_extra_1.default.writeFile(envPath, newEnv);
-                    console.log("🔐 AUTH_SECRET added to .env file.");
+                    console.log("🔐 BETTER_AUTH_SECRET and BETTER_AUTH_URL added to .env file.");
                 }
                 else {
-                    console.log("⚠️  AUTH_SECRET already exists in .env. Skipped.");
+                    console.log("⚠️  BETTER_AUTH_SECRET already exists in .env. Skipped.");
                 }
             }
             // If Mailgun was selected, copy the lib and install deps

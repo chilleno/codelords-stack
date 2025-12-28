@@ -31,7 +31,7 @@ async function main() {
         {
             type: "select",
             name: "auth",
-            message: "Include Auth.js (Email/Password)?",
+            message: "Include Better Auth (Email/Password)?",
             choices: [
                 { title: "Yes", value: true },
                 { title: "No", value: false },
@@ -78,32 +78,32 @@ async function main() {
     for (const feature of features) {
         console.log(`🔧 Adding ${feature}...`);
 
-        // If Auth.js was selected, copy the login page
+        // If Better Auth was selected, copy the auth templates
         if (feature === "auth") {
-            console.log("🧩 Adding login page template.");
+            console.log("🧩 Adding auth templates.");
             const loginPagePath = path.join(__dirname, "../templates/auth");
             const loginTargetPath = path.join(projectPath, "src");
             await fs.copy(loginPagePath, loginTargetPath);
 
-            console.log("🔐 Installing next-auth...");
-            await execa("npm", ["install", "next-auth@beta"], {
+            console.log("🔐 Installing better-auth...");
+            await execa("npm", ["install", "better-auth"], {
                 cwd: projectPath,
                 stdio: "ignore",
             });
 
 
-            console.log("🔑 Generating Auth secret...");
+            console.log("🔑 Generating Better Auth secret...");
             const secret = crypto.randomBytes(32).toString("hex");
 
             const envPath = path.join(projectPath, ".env");
             const envContent = await fs.readFile(envPath, "utf-8");
 
-            if (!envContent.includes("AUTH_SECRET=")) {
-                const newEnv = `${envContent}\nAUTH_SECRET=${secret}\n`;
+            if (!envContent.includes("BETTER_AUTH_SECRET=")) {
+                const newEnv = `${envContent}\nBETTER_AUTH_SECRET=${secret}\nBETTER_AUTH_URL=http://localhost:3000\n`;
                 await fs.writeFile(envPath, newEnv);
-                console.log("🔐 AUTH_SECRET added to .env file.");
+                console.log("🔐 BETTER_AUTH_SECRET and BETTER_AUTH_URL added to .env file.");
             } else {
-                console.log("⚠️  AUTH_SECRET already exists in .env. Skipped.");
+                console.log("⚠️  BETTER_AUTH_SECRET already exists in .env. Skipped.");
             }
 
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
-import { signIn } from "next-auth/react"
+import { signIn } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import LoadingQuantum from '@/components/loading/loading-quantum';
 import { GalleryVerticalEnd } from "lucide-react"
@@ -30,16 +30,21 @@ export function LoginForm({
         setError("")
 
         startTransition(async () => {
-            const res = await signIn("credentials", {
+            const { error } = await signIn.email({
                 email,
                 password,
-                redirect: false,
+            }, {
+                onSuccess: () => {
+                    router.push("/status") // redirect to homepage or dashboard
+                },
+                onError: (ctx) => {
+                    setError(ctx.error.message || "Invalid email or password")
+                    setIsLoading(false)
+                },
             })
-            if (res?.error) {
-                setError("Correo o contraseña incorrectos")
+            if (error) {
+                setError(error.message || "Invalid email or password")
                 setIsLoading(false)
-            } else {
-                router.push("/status") // redirect to homepage or dashboard
             }
         })
     }

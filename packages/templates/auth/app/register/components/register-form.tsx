@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { signUp } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import LoadingQuantum from '@/components/loading/loading-quantum';
 import { GalleryVerticalEnd } from "lucide-react"
@@ -30,21 +31,22 @@ export function RegisterForm({
         setError("")
 
         startTransition(async () => {
-            const newUser = await fetch("/api/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
+            const { error } = await signUp.email({
+                name,
+                email,
+                password,
+            }, {
+                onSuccess: () => {
+                    router.push("/login")
                 },
-                body: JSON.stringify({ name, email, password }),
+                onError: (ctx) => {
+                    setError(ctx.error.message || "An error occurred while registering.")
+                    setIsLoading(false)
+                },
             })
-
-            //if register is successful, redirect to login page
-            if (newUser.status === 201) {
-                router.push("/login");
-            } else {
-                const errorData = await newUser.json();
-                setError(errorData.message || "An error occurred while registering.");
-                setIsLoading(false);
+            if (error) {
+                setError(error.message || "An error occurred while registering.")
+                setIsLoading(false)
             }
         })
     }
