@@ -1,13 +1,14 @@
 {
   "name": "codelords-stack",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": false,
   "bin": {
     "codelords-stack": "./packages/cli/index.js"
   },
   "scripts": {
     "dev": "tsx packages/cli/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "chalk": "^5.4.1",

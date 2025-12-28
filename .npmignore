@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# GitHub
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules
+package-lock.json
+
+# Build artifacts
+dist
+.next
+.turbo
+
+# Source files (we publish compiled JS)
+*.ts
+tsconfig.json
+
+# Testing and docs
+*.test.ts
+*.spec.ts
+test
+__tests__
+
+# Root template files (not part of published package)
+pnpm-workspace.yaml
+lerna.json
+
+# OS
+.DS_Store
+Thumbs.db
