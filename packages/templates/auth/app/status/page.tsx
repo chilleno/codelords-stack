@@ -1,11 +1,11 @@
 import { getPrismaClient } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { logout } from "@/util/logout";
-import { Suspense } from "react";
+import { headers } from "next/headers";
+import { LogoutButton } from "./components/logout-button";
 
 export default async function StatusPage() {
   let dbStatus = "unknown";
-  const session = await auth();
+  const session = await auth.api.getSession({ headers: await headers() });
 
   try {
     const prisma = await getPrismaClient();
@@ -28,25 +28,16 @@ export default async function StatusPage() {
         <br />
         {session && `User: ${session.user.email}`}
         <br />
-        <Suspense>
-          {session ? (
-            <button
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              onClick={logout}
-            >
-              Logout
-            </button>
-          )
-            : (
-              <a
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                href="/login"
-              >
-                Login
-              </a>
-            )
-          }
-        </Suspense>
+        {session ? (
+          <LogoutButton />
+        ) : (
+          <a
+            className="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            href="/login"
+          >
+            Login
+          </a>
+        )}
       </p>
     </div>
   );

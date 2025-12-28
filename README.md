@@ -13,7 +13,7 @@ Use it to kick off production-ready projects in seconds.
 - ⚡️ Next.js 15+ with App Router
 - 🎨 Tailwind CSS pre-configured
 - 🧬 Prisma + PostgreSQL database setup
-- 🔐 Optional Auth.js (Email/Password login)
+- 🔐 Optional Better Auth (Email/Password login)
 - 💳 Optional LemonSqueezy integration (WIP 🚧)
 - ✅ `/status` page to verify feature status
 - 🛠️ CLI with `npx codelords-stack` command
@@ -117,13 +117,25 @@ Visit [http://localhost:3000/status](http://localhost:3000/status) to check:
 
 You can toggle optional integrations during CLI setup:
 
-- **Auth.js**  
-  Adds full authentication flow with email/password login.
+- **Better Auth**  
+  Adds full authentication flow with email/password login, registration, and session management.
+  Includes customizable user roles (default: `user`, `admin`).
 
 - **LemonSqueezy**  
   Adds premium feature monetization with payment hooks.
 
 You can always add these manually later, or modify your template.
+
+---
+
+## 🔧 Customizing User Roles
+
+Roles are stored as strings for flexibility. Default roles: `user`, `admin`
+
+To customize roles in your generated project:
+1. Edit `prisma/schema.prisma` - change the `role` field default value
+2. Edit `src/lib/auth.ts` - update the `additionalFields.role` configuration
+3. Run `npx prisma generate && npx prisma db push`
 
 ---
 

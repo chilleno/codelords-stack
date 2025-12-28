@@ -1,43 +1,44 @@
-import NextAuth from "next-auth"
-import Credentials from "next-auth/providers/credentials"
-import { getUserFromDb } from "@/util/auth";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { getPrismaClient } from "@/lib/prisma";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-      // e.g. domain, username, password, 2FA token, etc.
-      credentials: {
-        email: {},
-        password: {},
-      },
-      authorize: async (credentials) => {
-        // logic to verify if the user exists
-        const user = await getUserFromDb(credentials?.email as string, credentials?.password as string)
-        if (!user) {
-          // No user found, so this is their first attempt to login
-          // Optionally, this is also the place you could do a user registration
-          throw new Error("Invalid credentials.");
-        }
-        // return user object with their profile data
-        return user;
-      }
+// =============================================================================
+// BETTER AUTH SERVER CONFIGURATION
+// =============================================================================
+// This is the server-side auth configuration.
+// For client-side auth (signIn, signUp, signOut, useSession), use auth-client.ts
+// =============================================================================
+
+// =============================================================================
+// ROLE CUSTOMIZATION
+// =============================================================================
+// To add/remove roles:
+// 1. Update the `type` array below with your role values
+// 2. Update prisma/schema.prisma: role String @default("your-default")
+// 3. Run: npx prisma generate && npx prisma db push
+// =============================================================================
+
+const prisma = await getPrismaClient();
+
+export const auth = betterAuth({
+    database: prismaAdapter(prisma, {
+        provider: "postgresql",
     }),
-  ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) { // User is available during sign-in
-        token.id = user.id
-        token.name = user.name
-        token.role = user.role
-      }
-      return token
+    emailAndPassword: {
+        enabled: true,
     },
-    session({ session, token }) {
-      session.user.id = token.id as string
-      session.user.name = token.name as string
-      session.user.role = token.role as string
-      return session
+    user: {
+        additionalFields: {
+            role: {
+                type: "string",
+                required: false,
+                defaultValue: "user",
+                input: false, // Users cannot set their own role during signup
+            },
+        },
     },
-  },
-})
+});
+
+// Type exports for use in other files
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.Session.user;
