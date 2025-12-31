@@ -23,7 +23,7 @@ dist
 
 # Source files (we publish compiled JS, but keep templates)
 packages/cli/*.ts
-tsconfig.json
+/tsconfig.json
 
 # Testing and docs
 *.test.ts
