@@ -21,8 +21,8 @@ dist
 .next
 .turbo
 
-# Source files (we publish compiled JS)
-*.ts
+# Source files (we publish compiled JS, but keep templates)
+packages/cli/*.ts
 tsconfig.json
 
 # Testing and docs
