@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
 import crypto from "crypto";
+import os from "os";
 
 // Clear the console and display the logo
 console.clear();
@@ -38,10 +39,10 @@ async function main() {
             ],
             initial: 0,
         },
-        {
+{
             type: "select",
-            name: "lemonsqueezy",
-            message: "Include LemonSqueezy Payments?",
+            name: "mailgun",
+            message: "Include Mailgun (email sending)?",
             choices: [
                 { title: "Yes", value: true },
                 { title: "No", value: false },
@@ -50,8 +51,18 @@ async function main() {
         },
         {
             type: "select",
-            name: "mailgun",
-            message: "Include Mailgun (email sending)?",
+            name: "claudeCode",
+            message: "Include Claude Code skills & rules?",
+            choices: [
+                { title: "Yes", value: true },
+                { title: "No", value: false },
+            ],
+            initial: 0,
+        },
+        {
+            type: "select",
+            name: "nextSkills",
+            message: "Include Vercel Next.js skills?",
             choices: [
                 { title: "Yes", value: true },
                 { title: "No", value: false },
@@ -63,8 +74,7 @@ async function main() {
     // Convert yes/no answers to an array of selected features
     const features = [];
     if (response.auth) features.push("auth");
-    if (response.lemonsqueezy) features.push("lemonsqueezy");
-    if (response.mailgun) features.push("mailgun");
+if (response.mailgun) features.push("mailgun");
 
     const { projectName } = response;
     const projectPath = path.join(process.cwd(), projectName);
@@ -151,6 +161,155 @@ async function main() {
             console.log(
                 "ℹ️  Remember to set MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_FROM_NAME in your .env file."
             );
+        }
+    }
+
+    // Claude Code skills & rules
+    if (response.claudeCode) {
+        console.log(chalk.cyan("🤖 Adding Claude Code skills & rules..."));
+
+        const tmpDir = path.join(os.tmpdir(), `codelords-skills-${Date.now()}`);
+        const skillNames = [
+            "claude-api",
+            "frontend-design",
+            "web-artifacts-builder",
+            "mcp-builder",
+            "doc-coauthoring",
+        ];
+
+        try {
+            console.log("📡 Fetching Claude Code skills from GitHub...");
+            await execa("git", ["clone", "--depth", "1", "https://github.com/anthropics/skills.git", tmpDir], {
+                stdio: "ignore",
+            });
+
+            const skillsTargetDir = path.join(projectPath, ".claude", "skills");
+            await fs.ensureDir(skillsTargetDir);
+
+            for (const skillName of skillNames) {
+                const src = path.join(tmpDir, "skills", skillName);
+                const dest = path.join(skillsTargetDir, skillName);
+                await fs.copy(src, dest);
+            }
+
+            console.log(`📦 Copied ${skillNames.length} Anthropic skills to .claude/skills/.`);
+        } catch (err) {
+            console.log(chalk.yellow("⚠️  Could not fetch Anthropic skills (network issue?). Skipping."));
+        } finally {
+            await fs.remove(tmpDir).catch(() => {});
+        }
+
+        // Generate CLAUDE.md with stack-specific rules
+        console.log("📝 Generating CLAUDE.md with stack-specific rules...");
+
+        let claudeMd = `# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this project.
+
+## Stack
+
+- Next.js 16 (App Router, Turbopack)
+- React 19
+- Prisma 6
+- Tailwind CSS 4
+- shadcn/ui (New York style)
+- next-themes
+
+## Key Patterns
+
+### Import Aliases
+
+\`@/*\` maps to \`src/*\`. Always use this alias for imports:
+\`\`\`typescript
+import { Component } from "@/components/component";
+\`\`\`
+
+### Prisma Client
+
+Always use the factory function, never instantiate directly:
+\`\`\`typescript
+import { getPrismaClient } from "@/lib/prisma";
+const prisma = await getPrismaClient();
+\`\`\`
+Do NOT use \`new PrismaClient()\` — the factory handles connection pooling and edge runtime compatibility.
+`;
+
+        if (response.auth) {
+            claudeMd += `
+## Better Auth
+
+This project uses Better Auth for authentication (email/password).
+
+- **Server config**: \`src/lib/auth.ts\` — uses \`prismaAdapter\` for database storage
+- **Client helpers**: \`src/lib/auth-client.ts\` — exports \`signIn\`, \`signUp\`, \`signOut\`, \`useSession\`
+- **API route**: \`src/app/api/auth/[...all]/route.ts\` — catch-all handler
+
+Usage in server components / API routes:
+\`\`\`typescript
+import { auth } from "@/lib/auth";
+const session = await auth.api.getSession({ headers: await headers() });
+\`\`\`
+
+Usage in client components:
+\`\`\`typescript
+import { useSession, signIn, signOut } from "@/lib/auth-client";
+const { data: session } = useSession();
+\`\`\`
+
+To customize roles or add OAuth providers, modify \`src/lib/auth.ts\`.
+`;
+        }
+
+        if (response.mailgun) {
+            claudeMd += `
+## Mailgun
+
+Email sending is configured via \`src/lib/mailgun.ts\`.
+
+\`\`\`typescript
+import { sendSimpleMessage } from "@/lib/mailgun";
+await sendSimpleMessage(name, email, subject, text, html);
+\`\`\`
+
+Environment variables required: \`MAILGUN_API_KEY\`, \`MAILGUN_DOMAIN\`, \`MAILGUN_FROM_NAME\`.
+`;
+        }
+
+        await fs.writeFile(path.join(projectPath, "CLAUDE.md"), claudeMd);
+        console.log("✅ CLAUDE.md created with project-specific rules.");
+    }
+
+    // Vercel Next.js skills
+    if (response.nextSkills) {
+        console.log(chalk.cyan("⚡ Adding Vercel Next.js skills..."));
+
+        const tmpDirNext = path.join(os.tmpdir(), `codelords-next-skills-${Date.now()}`);
+        const nextSkillNames = [
+            "next-best-practices",
+            "next-cache-components",
+            "next-upgrade",
+        ];
+
+        try {
+            console.log("📡 Fetching Next.js skills from GitHub...");
+            await execa("git", ["clone", "--depth", "1", "https://github.com/vercel-labs/next-skills.git", tmpDirNext], {
+                stdio: "ignore",
+            });
+
+            const skillsTargetDir = path.join(projectPath, ".claude", "skills");
+            await fs.ensureDir(skillsTargetDir);
+
+            for (const skillName of nextSkillNames) {
+                const src = path.join(tmpDirNext, "skills", skillName);
+                const dest = path.join(skillsTargetDir, skillName);
+                await fs.copy(src, dest);
+            }
+
+            console.log(`📦 Copied ${nextSkillNames.length} Next.js skills to .claude/skills/.`);
+        } catch (err) {
+            console.log(chalk.yellow("⚠️  Could not fetch Next.js skills (network issue?). Skipping."));
+        } finally {
+            await fs.remove(tmpDirNext).catch(() => {});
         }
     }
 
