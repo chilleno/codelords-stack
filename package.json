@@ -1,6 +1,6 @@
 {
   "name": "codelords-stack",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "private": false,
   "bin": {
     "codelords-stack": "packages/cli/index.js"
@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "tsx packages/cli/index.ts",
     "build": "tsc",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "test:e2e": "node scripts/test-e2e.mjs"
   },
   "dependencies": {
     "chalk": "^5.4.1",
