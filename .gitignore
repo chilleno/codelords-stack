@@ -40,3 +40,7 @@ packages/templates/**/node_modules/
 # yarn.lock
 # pnpm-lock.yaml
 .github/copilot-instructions.md
+
+# E2E test artifacts
+test-skills-project/
+/.playwright-mcp
