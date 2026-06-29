@@ -2,16 +2,18 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+This project uses [pnpm](https://pnpm.io). Install dependencies, then run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
+```
+
+Set `DATABASE_URL` in `.env`, then sync the Prisma schema:
+
+```bash
+pnpm prisma generate
+pnpm prisma db push
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
