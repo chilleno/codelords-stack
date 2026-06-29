@@ -20,6 +20,48 @@ const path_1 = __importDefault(require("path"));
 const chalk_1 = __importDefault(require("chalk"));
 const crypto_1 = __importDefault(require("crypto"));
 const os_1 = __importDefault(require("os"));
+// Detect the package manager to use for the generated project: prefer pnpm,
+// fall back to npm when pnpm is not installed on the user's machine.
+function detectPackageManager() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, execa_1.execa)("pnpm", ["--version"]);
+            return "pnpm";
+        }
+        catch (_a) {
+            return "npm";
+        }
+    });
+}
+// Install the full dependency set, retrying with npm if pnpm fails.
+function installAll(pm, cwd) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, execa_1.execa)(pm, ["install"], { cwd, stdio: "inherit" });
+        }
+        catch (err) {
+            if (pm !== "pnpm")
+                throw err;
+            console.log(chalk_1.default.yellow("⚠️  pnpm install failed — retrying with npm..."));
+            yield (0, execa_1.execa)("npm", ["install"], { cwd, stdio: "inherit" });
+        }
+    });
+}
+// Add dependencies (pnpm uses `add`, npm uses `install`), retrying with npm if pnpm fails.
+function addDeps(pm, pkgs, cwd) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const args = pm === "pnpm" ? ["add", ...pkgs] : ["install", ...pkgs];
+        try {
+            yield (0, execa_1.execa)(pm, args, { cwd, stdio: "inherit" });
+        }
+        catch (err) {
+            if (pm !== "pnpm")
+                throw err;
+            console.log(chalk_1.default.yellow("⚠️  pnpm failed — retrying with npm..."));
+            yield (0, execa_1.execa)("npm", ["install", ...pkgs], { cwd, stdio: "inherit" });
+        }
+    });
+}
 // Clear the console and display the logo
 console.clear();
 const logo = chalk_1.default.cyan(`
@@ -89,8 +131,18 @@ function main() {
             features.push("mailgun");
         const { projectName } = response;
         const projectPath = path_1.default.join(process.cwd(), projectName);
+        const pm = yield detectPackageManager();
         console.log("📦 Copying base template...");
-        yield fs_extra_1.default.copy(path_1.default.join(__dirname, "../templates/base"), projectPath).then(() => {
+        yield fs_extra_1.default.copy(path_1.default.join(__dirname, "../templates/base"), projectPath, {
+            // Never copy local dev artifacts into the generated project.
+            filter: (src) => {
+                const name = path_1.default.basename(src);
+                return (name !== "node_modules" &&
+                    name !== ".next" &&
+                    name !== "package-lock.json" &&
+                    name !== ".DS_Store");
+            },
+        }).then(() => {
             // Now run the .env copy
             copyEnvFile(projectPath);
         });
@@ -103,10 +155,7 @@ function main() {
                 const loginTargetPath = path_1.default.join(projectPath, "src");
                 yield fs_extra_1.default.copy(loginPagePath, loginTargetPath);
                 console.log("🔐 Installing better-auth...");
-                yield (0, execa_1.execa)("npm", ["install", "better-auth"], {
-                    cwd: projectPath,
-                    stdio: "ignore",
-                });
+                yield addDeps(pm, ["better-auth"], projectPath);
                 console.log("🔑 Generating Better Auth secret...");
                 const secret = crypto_1.default.randomBytes(32).toString("hex");
                 const envPath = path_1.default.join(projectPath, ".env");
@@ -130,10 +179,7 @@ function main() {
                 yield fs_extra_1.default.copy(mailgunTemplatePath, path_1.default.join(libTargetDir, "mailgun.ts"));
                 console.log("📄 Copied mailgun.ts to src/lib.");
                 console.log("📦 Installing mailgun.js and form-data...");
-                yield (0, execa_1.execa)("npm", ["install", "mailgun.js@^11", "form-data@^4"], {
-                    cwd: projectPath,
-                    stdio: "ignore",
-                });
+                yield addDeps(pm, ["mailgun.js@^11", "form-data@^4"], projectPath);
                 // Add helpful .env placeholders if missing
                 try {
                     const envPath = path_1.default.join(projectPath, ".env");
@@ -296,9 +342,10 @@ Environment variables required: \`MAILGUN_API_KEY\`, \`MAILGUN_DOMAIN\`, \`MAILG
                 yield fs_extra_1.default.remove(tmpDirNext).catch(() => { });
             }
         }
-        console.log("📥 Installing dependencies...");
-        yield (0, execa_1.execa)("npm", ["install"], { cwd: projectPath, stdio: "ignore" });
+        console.log(`📥 Installing dependencies with ${pm}...`);
+        yield installAll(pm, projectPath);
         console.log("✅ Codelords Stack is ready!");
+        console.log(chalk_1.default.cyan(`\n  cd ${projectName} && ${pm} dev\n`));
     });
 }
 // Function to copy the .env.example file to .env in the project directory

@@ -7,6 +7,42 @@ import chalk from "chalk";
 import crypto from "crypto";
 import os from "os";
 
+type PackageManager = "pnpm" | "npm";
+
+// Detect the package manager to use for the generated project: prefer pnpm,
+// fall back to npm when pnpm is not installed on the user's machine.
+async function detectPackageManager(): Promise<PackageManager> {
+    try {
+        await execa("pnpm", ["--version"]);
+        return "pnpm";
+    } catch {
+        return "npm";
+    }
+}
+
+// Install the full dependency set, retrying with npm if pnpm fails.
+async function installAll(pm: PackageManager, cwd: string) {
+    try {
+        await execa(pm, ["install"], { cwd, stdio: "inherit" });
+    } catch (err) {
+        if (pm !== "pnpm") throw err;
+        console.log(chalk.yellow("⚠️  pnpm install failed — retrying with npm..."));
+        await execa("npm", ["install"], { cwd, stdio: "inherit" });
+    }
+}
+
+// Add dependencies (pnpm uses `add`, npm uses `install`), retrying with npm if pnpm fails.
+async function addDeps(pm: PackageManager, pkgs: string[], cwd: string) {
+    const args = pm === "pnpm" ? ["add", ...pkgs] : ["install", ...pkgs];
+    try {
+        await execa(pm, args, { cwd, stdio: "inherit" });
+    } catch (err) {
+        if (pm !== "pnpm") throw err;
+        console.log(chalk.yellow("⚠️  pnpm failed — retrying with npm..."));
+        await execa("npm", ["install", ...pkgs], { cwd, stdio: "inherit" });
+    }
+}
+
 // Clear the console and display the logo
 console.clear();
 const logo = chalk.cyan(`
@@ -79,8 +115,21 @@ if (response.mailgun) features.push("mailgun");
     const { projectName } = response;
     const projectPath = path.join(process.cwd(), projectName);
 
+    const pm = await detectPackageManager();
+
     console.log("📦 Copying base template...");
-    await fs.copy(path.join(__dirname, "../templates/base"), projectPath).then(() => {
+    await fs.copy(path.join(__dirname, "../templates/base"), projectPath, {
+        // Never copy local dev artifacts into the generated project.
+        filter: (src) => {
+            const name = path.basename(src);
+            return (
+                name !== "node_modules" &&
+                name !== ".next" &&
+                name !== "package-lock.json" &&
+                name !== ".DS_Store"
+            );
+        },
+    }).then(() => {
         // Now run the .env copy
         copyEnvFile(projectPath);
     });
@@ -96,10 +145,7 @@ if (response.mailgun) features.push("mailgun");
             await fs.copy(loginPagePath, loginTargetPath);
 
             console.log("🔐 Installing better-auth...");
-            await execa("npm", ["install", "better-auth"], {
-                cwd: projectPath,
-                stdio: "ignore",
-            });
+            await addDeps(pm, ["better-auth"], projectPath);
 
 
             console.log("🔑 Generating Better Auth secret...");
@@ -133,10 +179,7 @@ if (response.mailgun) features.push("mailgun");
             console.log("📄 Copied mailgun.ts to src/lib.");
 
             console.log("📦 Installing mailgun.js and form-data...");
-            await execa("npm", ["install", "mailgun.js@^11", "form-data@^4"], {
-                cwd: projectPath,
-                stdio: "ignore",
-            });
+            await addDeps(pm, ["mailgun.js@^11", "form-data@^4"], projectPath);
 
             // Add helpful .env placeholders if missing
             try {
@@ -313,10 +356,11 @@ Environment variables required: \`MAILGUN_API_KEY\`, \`MAILGUN_DOMAIN\`, \`MAILG
         }
     }
 
-    console.log("📥 Installing dependencies...");
-    await execa("npm", ["install"], { cwd: projectPath, stdio: "ignore" });
+    console.log(`📥 Installing dependencies with ${pm}...`);
+    await installAll(pm, projectPath);
 
     console.log("✅ Codelords Stack is ready!");
+    console.log(chalk.cyan(`\n  cd ${projectName} && ${pm} dev\n`));
 }
 
 // Function to copy the .env.example file to .env in the project directory
