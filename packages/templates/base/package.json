@@ -9,7 +9,10 @@
       "@prisma/engines",
       "prisma",
       "sharp"
-    ]
+    ],
+    "overrides": {
+      "postcss": ">=8.5.10"
+    }
   },
   "scripts": {
     "dev": "next dev",
