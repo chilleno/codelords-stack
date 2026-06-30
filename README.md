@@ -10,7 +10,7 @@ Use it to kick off production-ready projects in seconds.
 
 ## ✨ Features
 
-- ⚡️ Next.js 15+ with App Router
+- ⚡️ Next.js 16 with App Router
 - 🎨 Tailwind CSS pre-configured
 - 🧬 Prisma + PostgreSQL database setup
 - 🔐 Optional Better Auth (Email/Password login)
@@ -48,8 +48,8 @@ DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/postgres?schema=database
 ### Run after installing:
 
 ```bash
-npx prisma generate
-npx prisma db push
+pnpm prisma generate
+pnpm prisma db push
 ```
 
 
@@ -58,20 +58,20 @@ You can find the Prisma schema at `prisma/schema.prisma`.
 ### To create a new migration, modify schema.prisma and then run:  
 
 ```bash
- npx prisma migrate dev --name name_of_migration;
+ pnpm prisma migrate dev --name name_of_migration;
 ```
 
 ### To reset database run:  [⚠️ this command will be remove all the tables on your connected database]
 
 ```bash
- npx prisma migrate reset
+ pnpm prisma migrate reset
 ```
 
 
 ### to push the schema to the database, run the following command:
 
 ```bash
- npx prisma db push
+ pnpm prisma db push
 ```
 
 ---
@@ -79,7 +79,7 @@ You can find the Prisma schema at `prisma/schema.prisma`.
 ## ⚙️ Run after database is configured:
 ```bash
 cd your-project-name
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -135,7 +135,7 @@ Roles are stored as strings for flexibility. Default roles: `user`, `admin`
 To customize roles in your generated project:
 1. Edit `prisma/schema.prisma` - change the `role` field default value
 2. Edit `src/lib/auth.ts` - update the `additionalFields.role` configuration
-3. Run `npx prisma generate && npx prisma db push`
+3. Run `pnpm prisma generate && pnpm prisma db push`
 
 ---
 

@@ -20,8 +20,8 @@ There are no automated tests. To verify changes, run the CLI, generate a project
 npm run dev                                    # generates a project
 cd <project-name>
 # set DATABASE_URL in .env
-npx prisma generate && npx prisma db push
-npm run dev                                    # starts Next.js dev server
+pnpm prisma generate && pnpm prisma db push
+pnpm dev                                       # starts Next.js dev server (generated project uses pnpm)
 # verify at http://localhost:3000/status
 ```
 
